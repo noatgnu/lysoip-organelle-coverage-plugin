@@ -1,0 +1,96 @@
+plugin:
+  id: "lysoip-organelle-coverage"
+  name: "Lyso-IP Organelle Coverage"
+  description: "Two one-sided Fisher's exact tests asking whether marker genes clear the Positive/Negative gate more often than the run's own background, optionally ranked across every curated list"
+  version: "1.0.0"
+  author: "CauldronGO Team"
+  category: "lysoip-qc"
+  icon: "scatter_plot"
+  repository: "https://github.com/noatgnu/lysoip-organelle-coverage-plugin"
+
+runtime:
+  environments: ["python"]
+  entrypoint: "lysoip_organelle_coverage.py"
+
+diagram:
+  enabled: true
+
+inputs:
+  - name: "verdict_file"
+    label: "Verdicts"
+    type: "file"
+    required: true
+    accept: ".tsv,.txt"
+    description: "verdict.tsv from the Lyso-IP Gating & Ranking plugin"
+
+  - name: "organelle_list"
+    label: "Expected Organelle List"
+    type: "select"
+    required: true
+    default: "LSD + Lysosome"
+    options:
+      - value: "LSD (Platt 2018)"
+        label: "LSD (Platt 2018) (53 genes)"
+      - value: "Lysosome (Hein 2025)"
+        label: "Lysosome (Hein 2025) (158 genes)"
+      - value: "LSD + Lysosome"
+        label: "LSD + Lysosome (180 genes)"
+      - value: "ER (Hein 2025)"
+        label: "ER (Hein 2025) (349 genes)"
+      - value: "Golgi (Hein 2025)"
+        label: "Golgi (Hein 2025) (87 genes)"
+      - value: "Endosome (Park and Itzhak 2022)"
+        label: "Endosome (Park and Itzhak 2022) (93 genes)"
+      - value: "Mitochondria (Rath 2021)"
+        label: "Mitochondria (Rath 2021) (1136 genes)"
+      - value: "Ribosome (Nakao 2004)"
+        label: "Ribosome (Nakao 2004) (80 genes)"
+      - value: "Nucleus (Leung 2006)"
+        label: "Nucleus (Leung 2006) (410 genes)"
+    description: "Curated marker-gene list bundled with this plugin, same source as the Lyso-IP Organelle Specificity plugin"
+
+  - name: "test_all_lists"
+    label: "Test Against Every List"
+    type: "boolean"
+    required: false
+    default: false
+    description: "When enabled, tests coverage against every curated list (not just the expected one), BH-FDR corrects across the panel, and ranks best-match-first — useful for diagnosing a mismatched or contaminated sample"
+
+  - name: "coverage_alpha"
+    label: "Coverage Alpha"
+    type: "number"
+    required: false
+    default: 0.05
+    min: 0
+    max: 1
+    step: 0.01
+    description: "p-value threshold for calling a list's enrichment significant"
+
+outputs:
+  - name: "organelle_coverage"
+    path: "organelle_coverage.tsv"
+    type: "data"
+    description: "One row per tested organelle list with marker/background Positive/Negative/Nonsignificant counts, Fisher's exact p-values, and (when testing all lists) BH-FDR-corrected q-values, ranked best-match-first"
+    format: "tsv"
+
+execution:
+  argsMapping:
+    verdict_file: "--verdict_file"
+    organelle_list: "--organelle_list"
+    test_all_lists:
+      flag: "--test_all_lists"
+      when: "true"
+    coverage_alpha: "--coverage_alpha"
+
+  outputDir: "--output_folder"
+
+  requirements:
+    python: ">=3.11"
+    packages:
+      - "scipy>=1.11.0"
+
+example:
+  enabled: true
+  values:
+    verdict_file: "examples/verdict.tsv"
+    organelle_list: "LSD + Lysosome"
