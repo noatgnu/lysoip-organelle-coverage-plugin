@@ -30,13 +30,18 @@ Two one-sided Fisher's exact tests asking whether marker genes clear the Positiv
 flowchart TD
     Start([Start]) --> step1
     step1["Loading verdicts"]
-    step1 --> step2
-    step2["Loading organelle marker lists"]
-    step2 --> step3
-    step3{"Testing coverage against every curated list"}
-    step3 --> step4
-    step4["Applying BH-FDR correction and ranking"]
-    step4 --> End([End])
+    step1 --> load_lists
+    load_lists["Loading organelle marker lists"]
+    load_lists --> test_all
+    test_all{"Test all curated lists?"}
+    test_all -->|"yes"| test_all_lists
+    test_all -->|"no"| test_one_list
+    test_all_lists["Testing coverage against every curated list"]
+    test_all_lists --> step2
+    test_one_list["Testing coverage against the target list"]
+    test_one_list --> step2
+    step2["Applying BH-FDR correction and ranking"]
+    step2 --> End([End])
 ```
 
 ## Runtime
@@ -52,7 +57,7 @@ flowchart TD
 | `verdict_file` | Verdicts | file | Yes | - | Always visible |
 | `organelle_list` | Expected Organelle List | select (LSD (Platt 2018) (53 genes), Lysosome (Hein 2025) (158 genes), LSD + Lysosome (180 genes), ER (Hein 2025) (349 genes), Golgi (Hein 2025) (87 genes), Endosome (Park and Itzhak 2022) (93 genes), Mitochondria (Rath 2021) (1136 genes), Ribosome (Nakao 2004) (80 genes), Nucleus (Leung 2006) (410 genes)) | Yes | LSD + Lysosome | Always visible |
 | `test_all_lists` | Test Against Every List | boolean | No | false | Always visible |
-| `coverage_alpha` | Coverage Alpha | number (min: 0, max: 1, step: 0) | No | 0.05 | Always visible |
+| `coverage_alpha` | Coverage Alpha | number (min: 0, max: 1, step: 0.01) | No | 0.05 | Always visible |
 
 ### Input Details
 

@@ -131,13 +131,18 @@
 <pre class="mermaid">flowchart TD
     Start([Start]) --&gt; step1
     step1[&quot;Loading verdicts&quot;]
-    step1 --&gt; step2
-    step2[&quot;Loading organelle marker lists&quot;]
-    step2 --&gt; step3
-    step3{&quot;Testing coverage against every curated list&quot;}
-    step3 --&gt; step4
-    step4[&quot;Applying BH-FDR correction and ranking&quot;]
-    step4 --&gt; End([End])
+    step1 --&gt; load_lists
+    load_lists[&quot;Loading organelle marker lists&quot;]
+    load_lists --&gt; test_all
+    test_all{&quot;Test all curated lists?&quot;}
+    test_all --&gt;|&quot;yes&quot;| test_all_lists
+    test_all --&gt;|&quot;no&quot;| test_one_list
+    test_all_lists[&quot;Testing coverage against every curated list&quot;]
+    test_all_lists --&gt; step2
+    test_one_list[&quot;Testing coverage against the target list&quot;]
+    test_one_list --&gt; step2
+    step2[&quot;Applying BH-FDR correction and ranking&quot;]
+    step2 --&gt; End([End])
 </pre>
 <h2 id="runtime">Runtime</h2>
 <ul>
@@ -188,7 +193,7 @@
 <tr>
 <td><code>coverage_alpha</code></td>
 <td>Coverage Alpha</td>
-<td>number (min: 0, max: 1, step: 0)</td>
+<td>number (min: 0, max: 1, step: 0.01)</td>
 <td>No</td>
 <td>0.05</td>
 <td>Always visible</td>

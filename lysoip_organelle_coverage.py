@@ -77,15 +77,20 @@ def main():
     with open(args.verdict_file) as f:
         verdicts = [(row["gene"], row["classification"]) for row in csv.DictReader(f, delimiter="\t")]
 
-    # @step: Loading organelle marker lists
+    # @step[id=load_lists]: Loading organelle marker lists
     with open(DATA_FILE) as f:
         marker_lists = json.load(f)
     if args.organelle_list not in marker_lists:
         raise SystemExit(f"Unknown organelle_list {args.organelle_list!r}; available: {sorted(marker_lists)}")
 
-    lists_to_test = list(marker_lists) if args.test_all_lists else [args.organelle_list]
+    # @step-if[id=test_all,from=load_lists]: Test all curated lists?
+    if args.test_all_lists:
+        # @step[id=test_all_lists,from=test_all:yes]: Testing coverage against every curated list
+        lists_to_test = list(marker_lists)
+    else:
+        # @step[id=test_one_list,from=test_all:no]: Testing coverage against the target list
+        lists_to_test = [args.organelle_list]
 
-    # @step-if: Testing coverage against every curated list
     rows = []
     for list_name in lists_to_test:
         marker_genes = set(marker_lists[list_name]["genes"])
@@ -94,7 +99,7 @@ def main():
         coverage["is_expected"] = list_name == args.organelle_list
         rows.append(coverage)
 
-    # @step: Applying BH-FDR correction and ranking
+    # @step[from=test_all_lists+test_one_list]: Applying BH-FDR correction and ranking
     for row in rows:
         row["positive_fdr"] = ""
 
